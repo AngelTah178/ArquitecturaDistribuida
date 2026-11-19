@@ -77,11 +77,11 @@ class PostgresManager:
                 with psycopg.connect(self.uri) as conn:
                     with conn.cursor() as cur:
                         query = """
-                            INSERT INTO clientes (nombre, correo, telefono)
+                            INSERT INTO clientes (nombre, email, telefono)
                             VALUES (%s, %s, %s)
-                            ON CONFLICT (correo) 
+                            ON CONFLICT (email) 
                             DO UPDATE SET nombre = EXCLUDED.nombre, telefono = COALESCE(EXCLUDED.telefono, clientes.telefono)
-                            RETURNING cliente_id;
+                            RETURNING id;
                         """
                         cur.execute(query, (nombre, correo, telefono))
                         res = cur.fetchone()
@@ -111,18 +111,18 @@ class PostgresManager:
 
     def get_or_create_producto(self, nombre: str, precio: float, sku: Optional[str] = None) -> int:
         """Busca o registra un producto de catálogo."""
+        codigo_sku = sku or f"SKU-{abs(hash(nombre)) % 100000}"
         if self.is_connected:
             try:
                 with psycopg.connect(self.uri) as conn:
                     with conn.cursor() as cur:
-                        if sku:
-                            cur.execute("SELECT producto_id FROM productos WHERE sku = %s;", (sku,))
-                            row = cur.fetchone()
-                            if row:
-                                return row[0]
+                        cur.execute("SELECT id FROM productos WHERE codigo_sku = %s;", (codigo_sku,))
+                        row = cur.fetchone()
+                        if row:
+                            return row[0]
                         cur.execute(
-                            "INSERT INTO productos (nombre, precio, sku) VALUES (%s, %s, %s) RETURNING producto_id;",
-                            (nombre, precio, sku or f"SKU-{int(time.time()*1000)}")
+                            "INSERT INTO productos (codigo_sku, nombre, precio, stock) VALUES (%s, %s, %s, 100) RETURNING id;",
+                            (codigo_sku, nombre, precio)
                         )
                         res = cur.fetchone()
                         conn.commit()
@@ -141,23 +141,23 @@ class PostgresManager:
             "producto_id": pid,
             "nombre": nombre,
             "precio": precio,
-            "sku": sku or f"SKU-{pid}",
+            "sku": codigo_sku,
             "stock": 100
         })
         return pid
 
-    def insert_pedido(self, cliente_id: int, fecha: str, mongo_id: str, cluster_origen: str, total: float) -> int:
+    def insert_pedido(self, cliente_id: int, fecha: str, mongo_id: str, cluster_origen: int, total: float) -> int:
         """Inserta o actualiza un pedido sincronizado de MongoDB."""
         if self.is_connected:
             try:
                 with psycopg.connect(self.uri) as conn:
                     with conn.cursor() as cur:
                         query = """
-                            INSERT INTO pedidos (cliente_id, fecha, mongo_id, cluster_origen, total, sincronizado_en)
-                            VALUES (%s, %s, %s, %s, %s, NOW())
+                            INSERT INTO pedidos (cliente_id, fecha_orden, mongo_id, cluster_origen, total, estado, sincronizado_en)
+                            VALUES (%s, %s, %s, %s, %s, 'CONFIRMADO', NOW())
                             ON CONFLICT (mongo_id)
                             DO UPDATE SET total = EXCLUDED.total, sincronizado_en = NOW()
-                            RETURNING pedido_id;
+                            RETURNING id;
                         """
                         cur.execute(query, (cliente_id, fecha, mongo_id, cluster_origen, total))
                         res = cur.fetchone()
@@ -188,16 +188,17 @@ class PostgresManager:
 
     def insert_detalle_pedido(self, pedido_id: int, producto_id: int, cantidad: int, precio_unitario: float) -> int:
         """Inserta detalle de pedido."""
+        subtotal = round(cantidad * precio_unitario, 2)
         if self.is_connected:
             try:
                 with psycopg.connect(self.uri) as conn:
                     with conn.cursor() as cur:
                         query = """
-                            INSERT INTO detalle_pedido (pedido_id, producto_id, cantidad, precio_unitario)
-                            VALUES (%s, %s, %s, %s)
-                            RETURNING detalle_id;
+                            INSERT INTO detalle_pedido (pedido_id, producto_id, cantidad, precio_unitario, subtotal)
+                            VALUES (%s, %s, %s, %s, %s)
+                            RETURNING id;
                         """
-                        cur.execute(query, (pedido_id, producto_id, cantidad, precio_unitario))
+                        cur.execute(query, (pedido_id, producto_id, cantidad, precio_unitario, subtotal))
                         res = cur.fetchone()
                         conn.commit()
                         return res[0]
@@ -212,21 +213,30 @@ class PostgresManager:
             "producto_id": producto_id,
             "cantidad": cantidad,
             "precio_unitario": precio_unitario,
-            "subtotal": round(cantidad * precio_unitario, 2)
+            "subtotal": subtotal
         })
         return did
 
     def insert_sync_log(self, cluster_origen: str, extraidos: int, cargados: int, estado: str, tiempo_ms: int, mensaje: str = ""):
         """Registra la auditoría del proceso ETL en la tabla sync_logs."""
+        duracion_sec = round(tiempo_ms / 1000.0, 3)
+        lote_id = f"SYNC-{int(time.time()*1000)}"
         if self.is_connected:
             try:
                 with psycopg.connect(self.uri) as conn:
                     with conn.cursor() as cur:
                         query = """
-                            INSERT INTO sync_logs (cluster_origen, registros_extraidos, registros_cargados, estado, tiempo_ms, mensaje)
-                            VALUES (%s, %s, %s, %s, %s, %s);
+                            INSERT INTO sync_logs (
+                                lote_id, total_extraidos, total_insertados, total_actualizados, 
+                                total_errores, estado, duracion_segundos, mensaje_detalle
+                            )
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
                         """
-                        cur.execute(query, (cluster_origen, extraidos, cargados, estado, tiempo_ms, mensaje))
+                        cur.execute(query, (
+                            lote_id, extraidos, cargados, 0,
+                            0 if estado == "SINCRONIZADO" else 1,
+                            estado, duracion_sec, f"[{cluster_origen}] {mensaje}"
+                        ))
                         conn.commit()
                         return
             except Exception as e:

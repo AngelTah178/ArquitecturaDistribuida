@@ -80,7 +80,7 @@ class ETLService:
                             cliente_id=cliente_id,
                             fecha=fecha_pedido,
                             mongo_id=mongo_id,
-                            cluster_origen=cluster_name,
+                            cluster_origen=cid,
                             total=total_pedido
                         )
 
