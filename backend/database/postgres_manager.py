@@ -56,7 +56,7 @@ class PostgresManager:
 
         try:
             start = time.time()
-            with psycopg.connect(self.uri, connect_timeout=1) as conn:
+            with psycopg.connect(self.uri, connect_timeout=10) as conn:
                 with conn.cursor() as cur:
                     cur.execute("SELECT 1;")
                     cur.fetchone()

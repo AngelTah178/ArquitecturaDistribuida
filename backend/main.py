@@ -38,6 +38,8 @@ async def lifespan(app: FastAPI):
     # 3. Iniciar Job Scheduler de sincronización automática (cada 3 min)
     if not settings.TESTING:
         sync_scheduler.start()
+        # Iniciar por defecto con 3 bots para arrancar simulación en Cluster 1
+        simulator_controller.set_bots_count(3)
     
     yield
     
