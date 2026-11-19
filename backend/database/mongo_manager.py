@@ -50,7 +50,7 @@ class MongoClusterManager:
             return True
 
         try:
-            client = MongoClient(uri, serverSelectionTimeoutMS=500, connectTimeoutMS=500)
+            client = MongoClient(uri, serverSelectionTimeoutMS=5000, connectTimeoutMS=5000)
             # Ping para verificar conectividad real
             start = time.time()
             client.admin.command("ping")
