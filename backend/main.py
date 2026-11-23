@@ -15,7 +15,7 @@ from simulator.bots import simulator_controller
 from modules.catalogos.router import router as catalogos_router
 from modules.monitoreo.router import router as monitoreo_router
 from simulator.router import router as simulator_router
-
+#test
 # Configuración de logging
 logging.basicConfig(
     level=logging.INFO,
