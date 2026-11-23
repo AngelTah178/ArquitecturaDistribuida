@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard de Simulación | Arquitectura Distribuida UPQROO</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @keyframes pulse-node {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.5)); }
+      50% { transform: scale(1.05); filter: drop-shadow(0 0 14px rgba(59, 130, 246, 0.9)); }
+    }
+    .node-active { animation: pulse-node 1.5s infinite; }
+    .badge-op-INSERT { background-color: #10B981; color: white; }
+    .badge-op-READ { background-color: #3B82F6; color: white; }
+    .badge-op-UPDATE { background-color: #F59E0B; color: white; }
+    .badge-op-DELETE { background-color: #EF4444; color: white; }
+    .badge-op-IDLE { background-color: #6B7280; color: white; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
+
+  <!-- Header -->
+  <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex flex-wrap items-center justify-between shadow-lg">
+    <div class="flex items-center space-x-3">
+      <div class="bg-blue-600 text-white p-2.5 rounded-xl shadow-md">
+        <i class="fa-solid fa-network-wired text-xl"></i>
+      </div>
+      <div>
+        <h1 class="text-xl font-bold tracking-tight text-white">UPQROO — Arquitectura Distribuida</h1>
+        <p class="text-xs text-slate-400">Sincronización MongoDB Atlas & PostgreSQL Neon (ETL 3 min)</p>
+      </div>
+    </div>
+
+    <!-- Indicador de Sincronización -->
+    <div class="flex items-center space-x-3 bg-slate-800/80 px-4 py-2 rounded-xl border border-slate-700">
+      <span class="text-xs font-semibold text-slate-300">Estado ETL:</span>
+      <div id="sync-badge" class="flex items-center space-x-2 text-sm font-bold text-emerald-400">
+        <span id="sync-dot" class="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></span>
+        <span id="sync-text">Sincronizado</span>
+      </div>
+      <button onclick="triggerETL()" class="ml-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-1.5 rounded-lg transition font-medium flex items-center space-x-1 shadow">
+        <i class="fa-solid fa-bolt"></i>
+        <span>Sincronizar Ya</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 py-6 space-y-6">
+
+    <!-- Control de Bots y Escalamiento Dinámico -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-sliders text-blue-400"></i>
+            Control de Concurrencia y Escalamiento Dinámico
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">
+            1-3 usuarios: <span class="text-amber-400 font-semibold">Cluster #1</span> | 
+            4-6 usuarios: <span class="text-cyan-400 font-semibold">Cluster #2</span> | 
+            7-9 usuarios: <span class="text-purple-400 font-semibold">Cluster #3</span>
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-xs text-slate-400 font-medium mr-1">Activar Bots:</span>
+          <button onclick="setBots(1)" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-semibold border border-slate-700 transition">1 Bot</button>
+          <button onclick="setBots(3)" class="px-3 py-1.5 bg-amber-950/60 text-amber-300 hover:bg-amber-900/60 rounded-lg text-xs font-semibold border border-amber-800 transition">3 Bots (Cluster 1)</button>
+          <button onclick="setBots(5)" class="px-3 py-1.5 bg-cyan-950/60 text-cyan-300 hover:bg-cyan-900/60 rounded-lg text-xs font-semibold border border-cyan-800 transition">5 Bots (Cluster 2)</button>
+          <button onclick="setBots(8)" class="px-3 py-1.5 bg-purple-950/60 text-purple-300 hover:bg-purple-900/60 rounded-lg text-xs font-semibold border border-purple-800 transition">8 Bots (Cluster 3)</button>
+          <button onclick="setBots(0)" class="px-3 py-1.5 bg-rose-950/60 text-rose-300 hover:bg-rose-900/60 rounded-lg text-xs font-semibold border border-rose-800 transition">Detener Todos</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flujo de Datos Animado: Bot -> API -> MongoDB -> ETL -> PostgreSQL -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow">
+      <h2 class="text-base font-bold text-white mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-arrows-split-up-and-left text-indigo-400"></i>
+        Flujo de Datos Distribuido en Tiempo Real
+      </h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-3 items-center text-center">
+        <!-- Paso 1: Bots -->
+        <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-xl">
+          <div class="text-3xl text-emerald-400 mb-2"><i class="fa-solid fa-robot"></i></div>
+          <div class="font-bold text-sm text-white">Capa 1: Bots</div>
+          <div id="flow-bots" class="text-xs text-slate-400 mt-1">0 Bots Activos</div>
+        </div>
+
+        <div class="text-slate-500 text-xl hidden md:block">
+          <i class="fa-solid fa-arrow-right animate-pulse text-blue-400"></i>
+        </div>
+
+        <!-- Paso 2: API REST & Router -->
+        <div class="bg-slate-800/80 border border-blue-500/50 p-4 rounded-xl node-active">
+          <div class="text-3xl text-blue-400 mb-2"><i class="fa-solid fa-server"></i></div>
+          <div class="font-bold text-sm text-white">Capa 2: FastAPI</div>
+          <div id="flow-cluster" class="text-xs text-blue-300 font-semibold mt-1">Cluster #1</div>
+        </div>
+
+        <div class="text-slate-500 text-xl hidden md:block">
+          <i class="fa-solid fa-arrow-right animate-pulse text-indigo-400"></i>
+        </div>
+
+        <!-- Paso 3: MongoDB Atlas -->
+        <div class="bg-slate-800/80 border border-amber-500/50 p-4 rounded-xl">
+          <div class="text-3xl text-amber-400 mb-2"><i class="fa-solid fa-leaf"></i></div>
+          <div class="font-bold text-sm text-white">Capa 3: MongoDB Atlas</div>
+          <div id="flow-mongo-docs" class="text-xs text-amber-300 mt-1">0 Docs</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-center text-center mt-4 pt-4 border-t border-slate-800">
+        <!-- Paso 4: ETL Service -->
+        <div class="bg-slate-800/80 border border-indigo-500/50 p-4 rounded-xl">
+          <div class="text-3xl text-indigo-400 mb-2"><i class="fa-solid fa-clock-rotate-left"></i></div>
+          <div class="font-bold text-sm text-white">Capa 4: ETL (3 min)</div>
+          <div id="flow-etl-status" class="text-xs text-indigo-300 mt-1">APScheduler Activo</div>
+        </div>
+
+        <div class="text-slate-500 text-xl hidden md:block text-center">
+          <i class="fa-solid fa-arrow-right animate-pulse text-emerald-400"></i>
+        </div>
+
+        <!-- Paso 5: PostgreSQL Neon -->
+        <div class="bg-slate-800/80 border border-emerald-500/50 p-4 rounded-xl">
+          <div class="text-3xl text-emerald-400 mb-2"><i class="fa-solid fa-database"></i></div>
+          <div class="font-bold text-sm text-white">Capa 5: PostgreSQL (Neon)</div>
+          <div id="flow-pg-records" class="text-xs text-emerald-300 mt-1">5 Tablas Normalizadas</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tarjetas de Métricas: MongoDB y PostgreSQL -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <!-- Métricas MongoDB -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow">
+        <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+          <i class="fa-solid fa-leaf"></i> Métricas MongoDB Atlas
+        </h3>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/60">
+            <span class="text-xs text-slate-400">Documentos Totales</span>
+            <div id="m-mongo-docs" class="text-2xl font-black text-white mt-1">0</div>
+          </div>
+          <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/60">
+            <span class="text-xs text-slate-400">Documentos Sincronizados</span>
+            <div id="m-mongo-synced" class="text-2xl font-black text-emerald-400 mt-1">0</div>
+          </div>
+          <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/60">
+            <span class="text-xs text-slate-400">Clusters Activos</span>
+            <div id="m-mongo-clusters" class="text-2xl font-black text-blue-400 mt-1">3 / 3</div>
+          </div>
+          <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/60">
+            <span class="text-xs text-slate-400">Usuarios Conectados</span>
+            <div id="m-mongo-users" class="text-2xl font-black text-purple-400 mt-1">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Métricas PostgreSQL Neon -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow">
+        <h3 class="text-sm font-bold text-emerald-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+          <i class="fa-solid fa-database"></i> Métricas PostgreSQL (Neon)
+        </h3>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/60">
+            <span class="text-xs text-slate-400">Registros Totales</span>
+            <div id="m-pg-records" class="text-2xl font-black text-white mt-1">0</div>
+          </div>
+          <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/60">
+            <span class="text-xs text-slate-400">Tablas Sincronizadas</span>
+            <div id="m-pg-tables" class="text-2xl font-black text-cyan-400 mt-1">5</div>
+          </div>
+          <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/60">
+            <span class="text-xs text-slate-400">Errores de Carga</span>
+            <div id="m-pg-errors" class="text-2xl font-black text-emerald-400 mt-1">0</div>
+          </div>
+          <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/60">
+            <span class="text-xs text-slate-400">Última Sincronización</span>
+            <div id="m-pg-last-sync" class="text-xs font-bold text-slate-300 mt-2 truncate">Sin registros</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bots: Representación Gráfica (1 a 9) -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow">
+      <h3 class="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-users-gear text-purple-400"></i> Bots Concurrentes en Ejecución
+      </h3>
+      <div id="bots-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+        <!-- Renderizado dinámico de Bots -->
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    async function updateDashboard() {
+      try {
+        const [metricsRes, botsRes, syncRes] = await Promise.all([
+          fetch('/metrics').then(r => r.json()),
+          fetch('/usuarios').then(r => r.json()),
+          fetch('/sincronizacion').then(r => r.json())
+        ]);
+
+        // 1. Tarjetas MongoDB
+        document.getElementById('m-mongo-docs').innerText = metricsRes.mongodb.documentos_totales;
+        document.getElementById('m-mongo-synced').innerText = metricsRes.mongodb.documentos_sincronizados;
+        document.getElementById('m-mongo-clusters').innerText = metricsRes.mongodb.clusters_activos + ' / 3';
+        document.getElementById('m-mongo-users').innerText = metricsRes.mongodb.usuarios_conectados;
+
+        // 2. Tarjetas PostgreSQL
+        document.getElementById('m-pg-records').innerText = metricsRes.postgresql.registros_totales;
+        document.getElementById('m-pg-tables').innerText = metricsRes.postgresql.tablas_sincronizadas;
+        document.getElementById('m-pg-errors').innerText = metricsRes.postgresql.errores_carga;
+        document.getElementById('m-pg-last-sync').innerText = metricsRes.postgresql.ultima_sincronizacion;
+
+        // 3. Indicador Flujo
+        document.getElementById('flow-bots').innerText = `${metricsRes.mongodb.usuarios_conectados} Bots Activos`;
+        document.getElementById('flow-cluster').innerText = botsRes.cluster_asignado || 'Cluster Mongo #1';
+        document.getElementById('flow-mongo-docs').innerText = `${metricsRes.mongodb.documentos_totales} Documentos`;
+        document.getElementById('flow-pg-records').innerText = `${metricsRes.postgresql.registros_totales} Registros Relacionales`;
+
+        // 4. Estado Sincronización (Semáforo)
+        const syncBadge = document.getElementById('sync-badge');
+        const syncDot = document.getElementById('sync-dot');
+        const syncText = document.getElementById('sync-text');
+
+        if (syncRes.estado === 'EN_EJECUCION') {
+          syncDot.className = 'w-3 h-3 rounded-full bg-amber-500 animate-ping';
+          syncBadge.className = 'flex items-center space-x-2 text-sm font-bold text-amber-400';
+          syncText.innerText = 'En ejecución';
+        } else if (syncRes.estado === 'ERROR') {
+          syncDot.className = 'w-3 h-3 rounded-full bg-rose-500 animate-ping';
+          syncBadge.className = 'flex items-center space-x-2 text-sm font-bold text-rose-400';
+          syncText.innerText = 'Error';
+        } else {
+          syncDot.className = 'w-3 h-3 rounded-full bg-emerald-500';
+          syncBadge.className = 'flex items-center space-x-2 text-sm font-bold text-emerald-400';
+          syncText.innerText = 'Sincronizado';
+        }
+
+        // 5. Renderizar Grid de Bots
+        renderBotsGrid();
+
+      } catch (err) {
+        console.error('Error al actualizar dashboard:', err);
+      }
+    }
+
+    async function renderBotsGrid() {
+      try {
+        const res = await fetch('/api/v1/bots/status');
+        const bots = await res.json();
+        const container = document.getElementById('bots-grid');
+        container.innerHTML = '';
+
+        bots.forEach(bot => {
+          const card = document.createElement('div');
+          card.className = `p-3.5 rounded-xl border transition-all ${
+            bot.is_running 
+              ? 'bg-slate-800/90 border-blue-500/60 shadow-md shadow-blue-950/50' 
+              : 'bg-slate-900/60 border-slate-800 opacity-60'
+          }`;
+
+          card.innerHTML = `
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-sm text-white flex items-center gap-2">
+                <i class="fa-solid fa-robot ${bot.is_running ? 'text-blue-400' : 'text-slate-500'}"></i>
+                ${bot.name}
+              </span>
+              <span class="text-xs px-2 py-0.5 rounded-full font-bold badge-op-${bot.current_op}">
+                ${bot.current_op}
+              </span>
+            </div>
+            <div class="text-xs text-slate-400 mt-2 flex justify-between">
+              <span>Cluster: <strong class="text-slate-200">${bot.cluster_used}</strong></span>
+              <span>Ops: <strong class="text-slate-200">${bot.ops_count}</strong></span>
+            </div>
+            <div class="text-[11px] text-slate-500 mt-1 truncate">
+              ${bot.status_message}
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      } catch (e) {
+        // En caso de que el endpoint no esté listo todavía
+      }
+    }
+
+    async function setBots(count) {
+      await fetch(`/api/v1/bots/control?count=${count}`, { method: 'POST' });
+      setTimeout(updateDashboard, 500);
+    }
+
+    async function triggerETL() {
+      await fetch('/sincronizacion/trigger', { method: 'POST' });
+      setTimeout(updateDashboard, 500);
+    }
+
+    // Inicializar sondeo cada 2 segundos
+    updateDashboard();
+    setInterval(updateDashboard, 2000);
+  </script>
+</body>
+</html>
