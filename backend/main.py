@@ -17,7 +17,6 @@ from modules.catalogos.router import router as catalogos_router
 from modules.monitoreo.router import router as monitoreo_router
 from simulator.router import router as simulator_router
 
-# Configuración de logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
@@ -30,16 +29,12 @@ async def lifespan(app: FastAPI):
     # --- EVENTO STARTUP ---
     logger.info("=== Iniciando Servidor de Arquitectura Distribuida UPQROO ===")
     
-    # 1. Inicializar conexiones a clusters MongoDB
     mongo_manager.connect_all()
     
-    # 2. Inicializar conexión a PostgreSQL Neon
     postgres_manager.connect()
     
-    # 3. Iniciar Job Scheduler de sincronización automática (cada 3 min)
     if not settings.TESTING:
         sync_scheduler.start()
-        # Iniciar por defecto con 3 bots para arrancar simulación en Cluster 1
         simulator_controller.set_bots_count(3)
     
     yield
@@ -61,7 +56,6 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Configuración de CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -70,14 +64,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Registro de Routers de la API
 app.include_router(catalogos_router)
 app.include_router(monitoreo_router)
 app.include_router(simulator_router)
 
-# -------------------------------------------------------------------------
-# Montar recursos estáticos del Frontend (CSS y JS)
-# -------------------------------------------------------------------------
 frontend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend"))
 
 if os.path.exists(frontend_dir):
@@ -90,14 +80,10 @@ if os.path.exists(frontend_dir):
         app.mount("/js", StaticFiles(directory=js_dir), name="js")
 
 
-# -------------------------------------------------------------------------
-# Vistas Web (Frontend)
-# -------------------------------------------------------------------------
 
 @app.get("/", response_class=HTMLResponse, tags=["Oficina Virtual"])
 @app.get("/oficina", response_class=HTMLResponse, tags=["Oficina Virtual"])
 def get_office_frontend():
-    """Sirve la nueva Oficina Virtual Pixel Art."""
     index_path = os.path.join(frontend_dir, "index.html")
     if os.path.exists(index_path):
         with open(index_path, "r", encoding="utf-8") as f:
@@ -107,7 +93,6 @@ def get_office_frontend():
 
 @app.get("/dashboard", response_class=HTMLResponse, tags=["Dashboard"])
 def get_legacy_dashboard():
-    """Sirve el dashboard métrico anterior como vista alternativa."""
     template_path = os.path.join(os.path.dirname(__file__), "templates", "dashboard.html")
     if os.path.exists(template_path):
         with open(template_path, "r", encoding="utf-8") as f:

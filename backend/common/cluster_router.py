@@ -4,13 +4,6 @@ from typing import Dict, List, Tuple, Optional
 
 
 class DynamicClusterRouter:
-    """
-    Gestiona la detección del número de usuarios/bots activos y enruta dinámicamente
-    las operaciones hacia el Cluster de MongoDB Atlas correspondiente:
-      - 1 a 3 usuarios activos: Cluster Mongo #1
-      - 4 a 6 usuarios activos: Cluster Mongo #2
-      - 7 a 9 usuarios activos: Cluster Mongo #3
-    """
 
     def __init__(self, session_ttl_seconds: int = 45):
         self._lock = threading.Lock()
@@ -25,7 +18,6 @@ class DynamicClusterRouter:
         }
 
     def touch_user(self, user_id: str, client_name: str = "Bot", ip: str = "127.0.0.1"):
-        """Registra o actualiza la actividad de un usuario/bot."""
         with self._lock:
             self._active_users[user_id] = {
                 "user_id": user_id,
@@ -36,12 +28,10 @@ class DynamicClusterRouter:
             }
 
     def remove_user(self, user_id: str):
-        """Remueve explícitamente a un usuario de los activos."""
         with self._lock:
             self._active_users.pop(user_id, None)
 
     def set_exact_active_users(self, count: int):
-        """Para pruebas de escalamiento dinámico, permite fijar exactamente N usuarios activos simulados."""
         with self._lock:
             self._active_users.clear()
             now = time.time()
@@ -56,7 +46,6 @@ class DynamicClusterRouter:
                 }
 
     def cleanup_expired_sessions(self):
-        """Limpia sesiones inactivas que sobrepasan el TTL."""
         now = time.time()
         with self._lock:
             expired = [
@@ -67,24 +56,17 @@ class DynamicClusterRouter:
                 del self._active_users[uid]
 
     def get_active_users_count(self) -> int:
-        """Retorna la cantidad actual de usuarios activos."""
         self.cleanup_expired_sessions()
         with self._lock:
             return len(self._active_users)
 
-    def get_active_users(self) -> List[dict]:
         """Retorna la lista de usuarios activos con su detalle."""
         self.cleanup_expired_sessions()
         with self._lock:
             return list(self._active_users.values())
 
     def get_target_cluster(self, forced_count: Optional[int] = None) -> Tuple[int, str]:
-        """
-        Determina el Cluster Mongo correspondiente según la regla de la rúbrica:
-          - 1 - 3: Cluster Mongo #1
-          - 4 - 6: Cluster Mongo #2
-          - 7 - 9: Cluster Mongo #3
-        """
+
         active_count = forced_count if forced_count is not None else self.get_active_users_count()
 
         if active_count <= 3:

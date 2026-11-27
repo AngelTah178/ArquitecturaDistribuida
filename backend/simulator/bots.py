@@ -32,7 +32,6 @@ SAMPLE_PRODUCTOS = [
 
 
 class BotWorker:
-    """Representa un bot que simula un cliente activo realizando operaciones concurrentes."""
 
     def __init__(self, bot_id: int):
         self.bot_id = bot_id
@@ -50,12 +49,10 @@ class BotWorker:
         logger.info(f"{self.name} iniciado.")
         while self.is_running:
             try:
-                # 1. Notificar actividad al enrutador dinámico
                 cluster_router.touch_user(self.user_id, client_name=self.name)
                 target_num, target_name = cluster_router.get_target_cluster()
                 self.cluster_used = target_name
 
-                # 2. Elegir aleatoriamente una operación CRUD (INSERT, UPDATE, DELETE, READ)
                 op = random.choice(["INSERT", "INSERT", "READ", "READ", "UPDATE", "DELETE"])
                 self.current_op = op
 
@@ -95,7 +92,6 @@ class BotWorker:
 
                 self.ops_count += 1
 
-                # Pausa aleatoria entre 1.5 y 3.5 segundos
                 await asyncio.sleep(random.uniform(1.5, 3.5))
 
             except asyncio.CancelledError:
@@ -128,7 +124,6 @@ class BotWorker:
 
 
 class SimulatorController:
-    """Controlador que orquesta la simulación de hasta 9 bots concurrentes."""
 
     def __init__(self):
         self.bots: Dict[int, BotWorker] = {i: BotWorker(i) for i in range(1, 10)}

@@ -10,13 +10,6 @@ logger = logging.getLogger("MongoClusterManager")
 
 
 class MongoClusterManager:
-    """
-    Gestiona la conexión, operaciones y estado de los 3 Clusters de MongoDB Atlas:
-      - Cluster #1
-      - Cluster #2
-      - Cluster #3
-    Incluye fallback resiliente para pruebas locales cuando no hay conexión a internet o Atlas.
-    """
 
     def __init__(self):
         self.uris = {
@@ -29,7 +22,6 @@ class MongoClusterManager:
         self.is_connected: Dict[int, bool] = {1: False, 2: False, 3: False}
         self.latencies: Dict[int, float] = {1: 0.0, 2: 0.0, 3: 0.0}
 
-        # Almacenamiento local en memoria como fallback / mock para desarrollo local
         self._mock_storage: Dict[int, Dict[str, List[dict]]] = {
             1: {"pedidos": [], "auditoria_operaciones": []},
             2: {"pedidos": [], "auditoria_operaciones": []},
@@ -37,12 +29,11 @@ class MongoClusterManager:
         }
 
     def connect_all(self):
-        """Intenta conectar a cada uno de los 3 clusters de MongoDB Atlas."""
+        #conexion
         for c_id, uri in self.uris.items():
             self.connect_cluster(c_id, uri)
 
     def connect_cluster(self, cluster_id: int, uri: str) -> bool:
-        """Intenta inicializar la conexión con un cluster específico."""
         if settings.TESTING or ("cluster" in uri and "mongodb.net" in uri and "password123" in uri):
             self.clients[cluster_id] = None
             self.is_connected[cluster_id] = False
@@ -51,7 +42,6 @@ class MongoClusterManager:
 
         try:
             client = MongoClient(uri, serverSelectionTimeoutMS=5000, connectTimeoutMS=5000)
-            # Ping para verificar conectividad real
             start = time.time()
             client.admin.command("ping")
             self.latencies[cluster_id] = round((time.time() - start) * 1000, 2)
@@ -67,7 +57,7 @@ class MongoClusterManager:
             return False
 
     def get_database(self, cluster_id: int):
-        """Obtiene la instancia de la base de datos para el cluster indicado."""
+        #obtiene instancia
         if self.is_connected[cluster_id] and self.clients[cluster_id]:
             return self.clients[cluster_id][self.db_name]
         return None
@@ -75,7 +65,6 @@ class MongoClusterManager:
     # ---------------- Operaciones CRUD ----------------
 
     def insert_pedido(self, cluster_id: int, pedido_doc: dict) -> dict:
-        """Inserta un pedido en el cluster indicado."""
         db = self.get_database(cluster_id)
         if db is not None:
             res = db.pedidos.insert_one(pedido_doc)

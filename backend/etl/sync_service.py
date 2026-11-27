@@ -8,23 +8,16 @@ logger = logging.getLogger("ETL_SyncService")
 
 
 class ETLService:
-    """
-    Servicio de Sincronización ETL:
-      1. Extraer: Documentos nuevos o modificados en MongoDB (sync_status == 'PENDING').
-      2. Transformar: Desanida estructuras JSON NoSQL a modelo 3FN (clientes, pedidos, detalle_pedido).
-      3. Cargar: Inserta o actualiza en PostgreSQL (Neon) garantizando integridad y trazabilidad.
-    """
 
     def __init__(self):
         self.is_running = False
         self.last_sync_time = "Nunca"
-        self.last_status = "SINCRONIZADO"  # 'SINCRONIZADO', 'EN_EJECUCION', 'ERROR'
+        self.last_status = "SINCRONIZADO" 
         self.total_extraidos_acumulado = 0
         self.total_cargados_acumulado = 0
         self.last_error_message = ""
 
     def run_pipeline(self) -> Dict[str, Any]:
-        """Ejecuta el ciclo completo del ETL."""
         if self.is_running:
             return {"estado": "EN_EJECUCION", "mensaje": "Un proceso de sincronización ya está en curso"}
 
@@ -44,7 +37,6 @@ class ETLService:
         try:
             logger.info("Iniciando ciclo de sincronización ETL (MongoDB -> PostgreSQL Neon)...")
 
-            # Iterar sobre los 3 clusters de MongoDB
             for cid in (1, 2, 3):
                 cluster_name = f"Cluster Mongo #{cid}"
                 pedidos = mongo_manager.get_pedidos(cluster_id=cid)
@@ -59,7 +51,6 @@ class ETLService:
 
                 for doc in pendientes:
                     try:
-                        # 1. Transformar y cargar CLIENTE (Evitar duplicados con upsert por correo)
                         cliente_data = doc.get("cliente", {})
                         nombre_cliente = cliente_data.get("nombre", "Cliente Desconocido")
                         correo_cliente = cliente_data.get("correo", f"cliente_{int(time.time())}@mail.com")
@@ -71,7 +62,6 @@ class ETLService:
                             telefono=tel_cliente
                         )
 
-                        # 2. Transformar y cargar PEDIDO (Evitar duplicados con mongo_id unique)
                         mongo_id = str(doc.get("_id"))
                         fecha_pedido = doc.get("fecha", time.strftime("%Y-%m-%d"))
                         total_pedido = float(doc.get("total", 0.0))
@@ -84,7 +74,6 @@ class ETLService:
                             total=total_pedido
                         )
 
-                        # 3. Transformar y cargar DETALLE_PEDIDO
                         productos_list = doc.get("productos", [])
                         for prod in productos_list:
                             prod_nombre = prod.get("nombre", "Producto Estándar")
@@ -109,14 +98,12 @@ class ETLService:
                     except Exception as item_err:
                         logger.error(f"Error transformando/cargando pedido {doc.get('_id')}: {item_err}")
 
-                # Marcar documentos sincronizados en MongoDB
                 if synced_ids:
                     mongo_manager.mark_pedidos_synced(cid, synced_ids)
 
                 resumen[f"cluster_{cid}"]["cargados"] = cargados_cluster
                 resumen["total_cargados"] += cargados_cluster
 
-                # Registrar auditoría en sync_logs
                 tiempo_cluster = int((time.time() - start_time) * 1000)
                 postgres_manager.insert_sync_log(
                     cluster_origen=cluster_name,
@@ -155,7 +142,6 @@ class ETLService:
             self.is_running = False
 
     def get_status(self) -> Dict[str, Any]:
-        """Retorna el estado de la sincronización para las tarjetas del Dashboard y la API."""
         return {
             "estado": self.last_status,
             "en_ejecucion": self.is_running,
