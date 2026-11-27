@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Guía de Estudio y Defensa - Arquitectura Distribuida UPQROO</title>
+  <style>
+    @page {
+      size: letter;
+      margin: 18mm 16mm 18mm 16mm;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      line-height: 1.55;
+      font-size: 11pt;
+      margin: 0;
+      padding: 0;
+    }
+    h1, h2, h3, h4 {
+      color: #0f172a;
+      font-weight: 700;
+      margin-top: 1.2em;
+      margin-bottom: 0.4em;
+    }
+    h1 {
+      font-size: 20pt;
+      border-bottom: 2px solid #2563eb;
+      padding-bottom: 8px;
+      margin-top: 0;
+    }
+    h2 {
+      font-size: 14pt;
+      color: #1d4ed8;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 4px;
+      margin-top: 1.4em;
+      page-break-after: avoid;
+    }
+    h3 {
+      font-size: 12pt;
+      color: #334155;
+      margin-top: 1em;
+      page-break-after: avoid;
+    }
+    p {
+      margin: 0.5em 0;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 7px;
+      font-size: 9pt;
+      font-weight: 600;
+      border-radius: 4px;
+      background: #e2e8f0;
+      color: #334155;
+    }
+    .badge-blue { background: #dbeafe; color: #1e40af; }
+    .badge-green { background: #dcfce7; color: #166534; }
+    .badge-amber { background: #fef3c7; color: #92400e; }
+    .badge-purple { background: #f3e8ff; color: #6b21a8; }
+
+    .header-box {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      color: white;
+      padding: 18px 22px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .header-box h1 {
+      color: #ffffff;
+      border-bottom: 2px solid #38bdf8;
+      font-size: 18pt;
+      margin: 0 0 6px 0;
+      padding-bottom: 6px;
+    }
+    .header-box p {
+      margin: 3px 0;
+      color: #94a3b8;
+      font-size: 10pt;
+    }
+    .header-box .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid #334155;
+      font-size: 9.5pt;
+      color: #cbd5e1;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 9.5pt;
+      page-break-inside: avoid;
+    }
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 7px 10px;
+      text-align: left;
+    }
+    th {
+      background-color: #f1f5f9;
+      color: #0f172a;
+      font-weight: 600;
+    }
+    tr:nth-child(even) td {
+      background-color: #f8fafc;
+    }
+
+    .card {
+      background: #f8fafc;
+      border-left: 4px solid #2563eb;
+      padding: 10px 14px;
+      margin: 10px 0;
+      border-radius: 0 6px 6px 0;
+      page-break-inside: avoid;
+    }
+    .card-title {
+      font-weight: 700;
+      color: #1e40af;
+      margin-bottom: 4px;
+      font-size: 10.5pt;
+    }
+    .card-warning {
+      border-left-color: #f59e0b;
+      background: #fffbeb;
+    }
+    .card-warning .card-title {
+      color: #b45309;
+    }
+    .card-success {
+      border-left-color: #10b981;
+      background: #f0fdf4;
+    }
+    .card-success .card-title {
+      color: #047857;
+    }
+
+    pre {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 8.8pt;
+      line-height: 1.45;
+      overflow-x: auto;
+      margin: 8px 0;
+      page-break-inside: avoid;
+      font-family: "Cascadia Code", Consolas, "Courier New", monospace;
+    }
+    code {
+      font-family: "Cascadia Code", Consolas, "Courier New", monospace;
+      font-size: 9pt;
+      background: #f1f5f9;
+      color: #0f172a;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+    .keyword { color: #f43f5e; font-weight: bold; }
+    .func { color: #38bdf8; }
+    .str { color: #34d399; }
+    .comment { color: #94a3b8; font-style: italic; }
+
+    .qa-box {
+      margin: 12px 0;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      background: white;
+      padding: 10px 14px;
+      page-break-inside: avoid;
+    }
+    .qa-question {
+      font-weight: 700;
+      color: #0f172a;
+      font-size: 10.5pt;
+      margin-bottom: 6px;
+    }
+    .qa-answer {
+      color: #334155;
+      font-size: 9.8pt;
+      border-left: 3px solid #3b82f6;
+      padding-left: 10px;
+      margin-top: 4px;
+    }
+
+    .page-break {
+      page-break-before: always;
+    }
+    .footer-note {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 8.5pt;
+      margin-top: 30px;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ENCABEZADO PRINCIPAL -->
+  <div class="header-box">
+    <h1>Guía de Defensa y Estudio Técnico</h1>
+    <p><strong>Proyecto:</strong> Arquitectura Distribuida y Sincronizada entre MongoDB Atlas y PostgreSQL Neon</p>
+    <div class="meta-grid">
+      <div><strong>Universidad:</strong> UPQROO (Ing. en Software)</div>
+      <div><strong>Materia:</strong> Bases de Datos en la Nube (7° Cuatrimestre)</div>
+      <div><strong>Stack:</strong> Python 3.12, FastAPI, PyMongo, Psycopg v3</div>
+      <div><strong>Cloud:</strong> 3 Clústeres MongoDB Atlas + Neon PostgreSQL Serverless</div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 1: RESUMEN EJECUTIVO -->
+  <h2>1. Resumen Ejecutivo de la Arquitectura</h2>
+  <p>
+    El sistema implementa un modelo de <strong>Persistencia Políglota Híbrida</strong>. Resuelve el problema de escalabilidad en sistemas de alto tráfico mediante dos propósitos específicos:
+  </p>
+  <ul>
+    <li><strong>Almacenamiento Transaccional NoSQL (Ingesta Rápida):</strong> 3 Clústeres distribuidos de MongoDB Atlas en AWS que reciben órdenes de compra desnormalizadas (con clientes y productos anidados en formato JSON).</li>
+    <li><strong>Enrutamiento y Balanceo Dinámico (FastAPI):</strong> Clasificación y aislamiento de tráfico mediante particionamiento horizontal (*sharding* lógico) según la concurrencia de clientes.</li>
+    <li><strong>Almacenamiento Analítico SQL (Reportes y BI):</strong> PostgreSQL en Neon Cloud con un esquema normalizado en <strong>Tercera Forma Normal (3FN)</strong> para reportes financieros y consistencia relacional.</li>
+    <li><strong>Sincronizador ETL Diferencial:</strong> Tarea programada cada 3 minutos (APScheduler) que extrae documentos pendientes, los transforma a 3FN y los carga de forma idempotente en PostgreSQL.</li>
+  </ul>
+
+  <!-- SECCIÓN 2: ENRUTAMIENTO DINÁMICO -->
+  <h2>2. Enrutamiento Dinámico y Sharding Lógico</h2>
+  <p>
+    El backend utiliza <code>common/cluster_router.py</code> para determinar a qué nodo de base de datos viaja cada transacción.
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th>Rango de Bots</th>
+        <th>Clúster Destino</th>
+        <th>Infraestructura Cloud</th>
+        <th>Comportamiento en Carga</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Bots 1, 2 y 3</strong></td>
+        <td><span class="badge badge-amber">Clúster Mongo #1</span></td>
+        <td><code>cluster1.okogthv.mongodb.net</code></td>
+        <td>Operaciones del rango base de usuarios.</td>
+      </tr>
+      <tr>
+        <td><strong>Bots 4, 5 y 6</strong></td>
+        <td><span class="badge badge-blue">Clúster Mongo #2</span></td>
+        <td><code>cluster2.4fi9hch.mongodb.net</code></td>
+        <td>Operaciones de carga media en paralelo.</td>
+      </tr>
+      <tr>
+        <td><strong>Bots 7, 8 y 9</strong></td>
+        <td><span class="badge badge-purple">Clúster Mongo #3</span></td>
+        <td><code>cluster3.xzp53zj.mongodb.net</code></td>
+        <td>Picos altos de concurrencia.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="card card-success">
+    <div class="card-title">Punto Clave para la Exposición</div>
+    Si activas <strong>5 bots</strong> en la demo: los bots 1, 2 y 3 estarán escribiendo en el <strong>Clúster 1</strong>, mientras que los bots 4 y 5 escribirán al mismo tiempo en el <strong>Clúster 2</strong>. Ambos clústeres operan en paralelo y alimentan al mismo PostgreSQL Neon.
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- SECCIÓN 3: CÓDIGO CRÍTICO DEL PROYECTO -->
+  <h2>3. Puntos Exactos de Código a Mostrar en el Editor</h2>
+
+  <h3>A. Dónde se levanta la API y los servicios (<code>backend/main.py</code>)</h3>
+  <p>Muestra el manejador del ciclo de vida asíncrono (<code>lifespan</code>):</p>
+<pre><code><span class="keyword">@asynccontextmanager</span>
+<span class="keyword">async def</span> <span class="func">lifespan</span>(app: FastAPI):
+    <span class="comment"># 1. Conecta con los 3 clústeres de MongoDB Atlas</span>
+    mongo_manager.<span class="func">connect_all</span>()
+    <span class="comment"># 2. Conecta con PostgreSQL Neon</span>
+    postgres_manager.<span class="func">connect</span>()
+    <span class="comment"># 3. Registra el event loop en el controlador de bots</span>
+    simulator_controller.<span class="func">set_loop</span>(asyncio.<span class="func">get_running_loop</span>())
+    <span class="comment"># 4. Inicia el cron periódico del ETL (cada 3 minutos)</span>
+    sync_scheduler.<span class="func">start</span>()
+    <span class="comment"># 5. Despierta 3 bots concurrentes por defecto</span>
+    simulator_controller.<span class="func">set_bots_count</span>(<span class="keyword">3</span>)
+    <span class="keyword">yield</span>
+    <span class="comment"># Apagado ordenado</span>
+    simulator_controller.<span class="func">stop_all</span>()
+    sync_scheduler.<span class="func">stop</span>()</code></pre>
+
+  <h3>B. Conexión a MongoDB Atlas (<code>backend/database/mongo_manager.py</code>)</h3>
+<pre><code>client = <span class="func">MongoClient</span>(uri, serverSelectionTimeoutMS=<span class="keyword">5000</span>, connectTimeoutMS=<span class="keyword">5000</span>)
+<span class="comment"># Validación activa del nodo con comando ping</span>
+client.admin.<span class="func">command</span>(<span class="str">"ping"</span>)</code></pre>
+
+  <h3>C. Conexión a PostgreSQL Neon (<code>backend/database/postgres_manager.py</code>)</h3>
+<pre><code><span class="keyword">with</span> psycopg.<span class="func">connect</span>(self.uri, connect_timeout=<span class="keyword">10</span>) <span class="keyword">as</span> conn:
+    <span class="keyword">with</span> conn.<span class="func">cursor</span>() <span class="keyword">as</span> cur:
+        cur.<span class="func">execute</span>(<span class="str">"SELECT 1;"</span>)</code></pre>
+
+  <!-- SECCIÓN 4: EL PIPELINE ETL -->
+  <h2>4. El Pipeline ETL y Consistencia de Datos (<code>backend/etl/sync_service.py</code>)</h2>
+  
+  <p>El proceso ETL transforma documentos NoSQL desnormalizados a un esquema relacional estricto:</p>
+  
+  <div class="card">
+    <div class="card-title">1. Extracción Diferencial (Extract)</div>
+    Solo consulta documentos con <code>sync_status != 'SYNCED'</code>. Esto evita reprocesar millones de registros históricos y minimiza el uso de CPU y ancho de banda.
+  </div>
+
+  <div class="card">
+    <div class="card-title">2. Transformación a 3FN (Transform)</div>
+    Desempaqueta el documento JSON de MongoDB:
+    <ul>
+      <li>El objeto <code>cliente</code> se normaliza en la tabla <code>clientes</code> (evitando duplicados por email).</li>
+      <li>La orden se inserta en <code>pedidos</code> registrando el <code>_id</code> de Mongo en la columna <code>mongo_id</code>.</li>
+      <li>El arreglo <code>productos</code> se desglosa en filas individuales en <code>productos</code> y <code>detalle_pedido</code> con sus claves foráneas.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="card-title">3. Carga Idempotente (Load)</div>
+    Utiliza sentencias SQL con protección de conflicto:
+<pre><code><span class="keyword">INSERT INTO</span> pedidos (cliente_id, fecha_orden, mongo_id, cluster_origen, total, estado, sincronizado_en)
+<span class="keyword">VALUES</span> (%s, %s, %s, %s, %s, <span class="str">'CONFIRMADO'</span>, NOW())
+<span class="keyword">ON CONFLICT</span> (mongo_id)
+<span class="keyword">DO UPDATE SET</span> total = EXCLUDED.total, sincronizado_en = NOW()
+<span class="keyword">RETURNING</span> id;</code></pre>
+  </div>
+
+  <div class="card card-success">
+    <div class="card-title">4. Cierre y Auditoría</div>
+    Al recibir la confirmación de PostgreSQL, MongoDB actualiza el documento a <code>"sync_status": "SYNCED"</code> y el servicio registra un log en la tabla <code>sync_logs</code> de Neon (registros extraídos, cargados, milisegundos y estado).
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- SECCIÓN 5: GUION DE DEMOSTRACIÓN EN VIVO -->
+  <h2>5. Guion de la Demostración en Vivo (Paso a Paso)</h2>
+  <ol>
+    <li>
+      <strong>Iniciar Servidor:</strong> Ejecuta <code>python main.py</code> dentro de <code>backend/</code>.
+    </li>
+    <li>
+      <strong>Oficina Virtual:</strong> Abre en tu navegador <code>http://localhost:8000/oficina</code> (o <code>/dashboard</code>).
+      <ul>
+        <li>Muestra a los Bots 1, 2 y 3 trabajando sobre el <strong>Clúster 1</strong>.</li>
+        <li>Presiona el botón de <strong>"5 Bots"</strong>. Muestra cómo los Bots 4 y 5 se activan y empiezan a enviar transacciones directamente al <strong>Clúster 2</strong>.</li>
+      </ul>
+    </li>
+    <li>
+      <strong>Verificación en MongoDB Atlas:</strong>
+      <ul>
+        <li>Abre la consola de MongoDB Atlas y entra al <strong>Clúster 2</strong>.</li>
+        <li>Entra a <strong>Browse Collections</strong>: muestra la base <code>neondb</code> y la colección <code>pedidos</code>.</li>
+        <li>Muestra un documento recién insertado: apunta a los evaluadores que su campo es <code>"sync_status": "PENDING"</code>.</li>
+      </ul>
+    </li>
+    <li>
+      <strong>Disparo del ETL:</strong>
+      <ul>
+        <li>En la Oficina Virtual, da clic al botón <strong>"Sincronizar Ya"</strong>.</li>
+        <li>Señala que el indicador de estado pasa a amarillo ("ETL en ejecución") y regresa a verde ("Sincronizado").</li>
+        <li>Refresca MongoDB Atlas: el documento cambió a <code>"sync_status": "SYNCED"</code>.</li>
+      </ul>
+    </li>
+    <li>
+      <strong>Verificación en PostgreSQL Neon:</strong>
+      <ul>
+        <li>En el SQL Editor de Neon, ejecuta la consulta de comprobación:
+<pre><code><span class="keyword">SELECT</span> id, mongo_id, cluster_origen, total, sincronizado_en 
+<span class="keyword">FROM</span> pedidos 
+<span class="keyword">ORDER BY</span> id <span class="keyword">DESC LIMIT</span> <span class="keyword">5</span>;</code></pre>
+        </li>
+        <li>Comprueba que el <code>mongo_id</code> coincide con el <code>_id</code> del documento de MongoDB.</li>
+        <li>Ejecuta la consulta de auditoría:
+<pre><code><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> sync_logs <span class="keyword">ORDER BY</span> id <span class="keyword">DESC LIMIT</span> <span class="keyword">3</span>;</code></pre>
+        </li>
+      </ul>
+    </li>
+  </ol>
+
+  <!-- SECCIÓN 6: BANCO DE PREGUNTAS TRAMPA -->
+  <h2>6. Banco de Preguntas Trampa de los Profesores</h2>
+
+  <div class="qa-box">
+    <div class="qa-question">P1: ¿Por qué no había base de datos ni tablas en el Clúster 2 al principio?</div>
+    <div class="qa-answer">
+      <strong>Respuesta:</strong> En MongoDB rige el principio de <em>Lazy Creation</em> (creación perezosa). Las bases de datos y colecciones no se crean mediante DDL (como <code>CREATE DATABASE</code>), sino que se inicializan físicamente en disco en el milisegundo en que se ejecuta la primera inserción (<code>insert_one</code>) derivada de los bots del rango 4 al 6.
+    </div>
+  </div>
+
+  <div class="qa-box">
+    <div class="qa-question">P2: ¿Cómo garantizan que PostgreSQL y MongoDB tienen la misma información?</div>
+    <div class="qa-answer">
+      <strong>Respuesta:</strong> Mediante el modelo de <strong>Consistencia Eventual</strong>. MongoDB asume la ingesta inmediata con <code>PENDING</code>. El ETL periódico lee en lotes diferenciales y solo tras un commit exitoso en Neon actualiza el estado a <code>SYNCED</code> en Atlas. Si ocurre un fallo de red, la transacción no se pierde y se reintenta en el próximo ciclo gracias a la cláusula <code>ON CONFLICT (mongo_id)</code> (idempotencia).
+    </div>
+  </div>
+
+  <div class="qa-box">
+    <div class="qa-question">P3: ¿Cómo consultan los índices de las bases de datos?</div>
+    <div class="qa-answer">
+      <strong>En MongoDB:</strong> <code>db.pedidos.getIndexes();</code> (índice único en <code>_id</code>).<br>
+      <strong>En PostgreSQL Neon:</strong> 
+      <code>SELECT tablename, indexname, indexdef FROM pg_indexes WHERE tablename = 'pedidos';</code> (índice único en <code>mongo_id</code> para búsquedas O(1)).
+    </div>
+  </div>
+
+  <div class="qa-box">
+    <div class="qa-question">P4: ¿Cómo se manejó la seguridad y los roles de usuario?</div>
+    <div class="qa-answer">
+      <strong>Respuesta:</strong> Aplicando el principio de menor privilegio. En MongoDB Atlas se crearon roles dedicados: <code>mongo_developer</code> (lectura y escritura acotada únicamente a la base <code>neondb</code>) y <code>mongo_user</code> (solo lectura para auditoría). En Neon se utiliza autenticación cifrada mediante canal seguro SSL (<code>sslmode=require</code>).
+    </div>
+  </div>
+
+  <div class="footer-note">
+    Documento preparado para el equipo de desarrollo de UPQROO • Arquitectura Distribuida 2026
+  </div>
+
+</body>
+</html>
