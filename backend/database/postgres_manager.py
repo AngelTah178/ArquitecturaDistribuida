@@ -71,7 +71,6 @@ class PostgresManager:
             return False
 
     def upsert_cliente(self, nombre: str, correo: str, telefono: Optional[str] = None) -> int:
-        """Inserta o actualiza un cliente garantizando no duplicados."""
         if self.is_connected:
             try:
                 with psycopg.connect(self.uri) as conn:
@@ -90,7 +89,6 @@ class PostgresManager:
             except Exception as e:
                 logger.error(f"Error en Neon upsert_cliente: {e}")
 
-        # Fallback local
         for c in self._mock_tables["clientes"]:
             if c["correo"] == correo:
                 c["nombre"] = nombre
@@ -110,7 +108,6 @@ class PostgresManager:
         return cid
 
     def get_or_create_producto(self, nombre: str, precio: float, sku: Optional[str] = None) -> int:
-        """Busca o registra un producto de catálogo."""
         codigo_sku = sku or f"SKU-{abs(hash(nombre)) % 100000}"
         if self.is_connected:
             try:
@@ -130,7 +127,6 @@ class PostgresManager:
             except Exception as e:
                 logger.error(f"Error en Neon get_or_create_producto: {e}")
 
-        # Fallback local
         for p in self._mock_tables["productos"]:
             if (sku and p.get("sku") == sku) or p["nombre"].lower() == nombre.lower():
                 return p["producto_id"]
@@ -147,7 +143,6 @@ class PostgresManager:
         return pid
 
     def insert_pedido(self, cliente_id: int, fecha: str, mongo_id: str, cluster_origen: int, total: float) -> int:
-        """Inserta o actualiza un pedido sincronizado de MongoDB."""
         if self.is_connected:
             try:
                 with psycopg.connect(self.uri) as conn:
@@ -166,7 +161,6 @@ class PostgresManager:
             except Exception as e:
                 logger.error(f"Error en Neon insert_pedido: {e}")
 
-        # Fallback local
         for p in self._mock_tables["pedidos"]:
             if p.get("mongo_id") == mongo_id:
                 p["total"] = total
@@ -187,7 +181,6 @@ class PostgresManager:
         return pid
 
     def insert_detalle_pedido(self, pedido_id: int, producto_id: int, cantidad: int, precio_unitario: float) -> int:
-        """Inserta detalle de pedido."""
         subtotal = round(cantidad * precio_unitario, 2)
         if self.is_connected:
             try:
@@ -218,7 +211,6 @@ class PostgresManager:
         return did
 
     def insert_sync_log(self, cluster_origen: str, extraidos: int, cargados: int, estado: str, tiempo_ms: int, mensaje: str = ""):
-        """Registra la auditoría del proceso ETL en la tabla sync_logs."""
         duracion_sec = round(tiempo_ms / 1000.0, 3)
         lote_id = f"SYNC-{int(time.time()*1000)}"
         if self.is_connected:
@@ -256,7 +248,6 @@ class PostgresManager:
         })
 
     def get_metrics(self) -> Dict[str, Any]:
-        """Obtiene métricas de PostgreSQL para las tarjetas del Dashboard."""
         if self.is_connected:
             try:
                 with psycopg.connect(self.uri) as conn:

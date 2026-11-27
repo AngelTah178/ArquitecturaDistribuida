@@ -53,7 +53,7 @@ class MongoClusterManager:
             logger.warning(f"No se pudo conectar a MongoDB Cluster #{cluster_id} ({e}). Usando modo resiliente.")
             self.clients[cluster_id] = None
             self.is_connected[cluster_id] = False
-            self.latencies[cluster_id] = 1.5  # Latencia mock simulada
+            self.latencies[cluster_id] = 1.5
             return False
 
     def get_database(self, cluster_id: int):
@@ -101,7 +101,6 @@ class MongoClusterManager:
         return all_pedidos
 
     def get_pedido_by_id(self, cluster_id: int, pedido_id: str) -> Optional[dict]:
-        """Busca un pedido por su identificador en el cluster especificado."""
         db = self.get_database(cluster_id)
         if db is not None:
             from bson.objectid import ObjectId
@@ -193,7 +192,6 @@ class MongoClusterManager:
             self._mock_storage[cluster_id]["auditoria_operaciones"].append(log_entry)
 
     def get_cluster_status(self) -> List[dict]:
-        """Reporta la salud, latencia y cantidad de documentos de cada cluster."""
         status_list = []
         for cid in [1, 2, 3]:
             db = self.get_database(cid)

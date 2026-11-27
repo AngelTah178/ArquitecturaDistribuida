@@ -10,7 +10,6 @@ class DynamicClusterRouter:
         self.session_ttl = session_ttl_seconds
         # user_id -> {"last_active": timestamp, "ip": str, "client_name": str}
         self._active_users: Dict[str, dict] = {}
-        # Historial de operaciones por cluster
         self._operations_count = {
             "Cluster Mongo #1": 0,
             "Cluster Mongo #2": 0,
@@ -72,14 +71,7 @@ class DynamicClusterRouter:
         bot_id: Optional[int] = None,
         forced_count: Optional[int] = None
     ) -> Tuple[int, str]:
-        """
-        Determina el clúster objetivo.
-        Prioridad:
-        1. bot_id explícito (1-3 -> Cluster 1, 4-6 -> Cluster 2, 7-9 -> Cluster 3)
-        2. user_id explícito ("bot_X" o hash consistente para usuarios generales)
-        3. Concurrencia global (forced_count o get_active_users_count())
-        """
-        # 1. Por bot_id directo
+
         if bot_id is not None:
             if 1 <= bot_id <= 3:
                 return 1, "Cluster Mongo #1"
@@ -88,7 +80,6 @@ class DynamicClusterRouter:
             else:
                 return 3, "Cluster Mongo #3"
 
-        # 2. Por user_id
         if user_id:
             user_str = str(user_id)
             if user_str.startswith("bot_"):
@@ -97,11 +88,9 @@ class DynamicClusterRouter:
                     return self.get_target_cluster(bot_id=num)
                 except (ValueError, IndexError):
                     pass
-            # Enrutamiento hash consistente para usuarios humanos
             cluster_num = (abs(hash(user_str)) % 3) + 1
             return cluster_num, f"Cluster Mongo #{cluster_num}"
 
-        # 3. Fallback: Concurrencia global
         active_count = forced_count if forced_count is not None else self.get_active_users_count()
 
         if active_count <= 3:
@@ -117,7 +106,6 @@ class DynamicClusterRouter:
         return cluster_num, cluster_name
 
     def record_operation(self, cluster_name: str):
-        """Registra la ejecución de una operación en un cluster específico."""
         with self._lock:
             if cluster_name in self._operations_count:
                 self._operations_count[cluster_name] += 1
@@ -125,10 +113,8 @@ class DynamicClusterRouter:
                 self._operations_count[cluster_name] = 1
 
     def get_operations_stats(self) -> Dict[str, int]:
-        """Retorna el conteo de operaciones ejecutadas por cluster."""
         with self._lock:
             return dict(self._operations_count)
 
 
-# Instancia singleton del enrutador dinámico
 cluster_router = DynamicClusterRouter()

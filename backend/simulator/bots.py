@@ -137,7 +137,6 @@ class SimulatorController:
         self._loop = loop
 
     def set_bots_count(self, count: int):
-        """Ajusta dinámicamente la cantidad de bots concurrentes activos (0 a 9)."""
         count = max(0, min(9, count))
         
         loop = None
