@@ -101,6 +101,8 @@ class BotWorker:
                 await asyncio.sleep(2)
 
         self.current_op = "IDLE"
+        self.is_running = False
+        self._task = None
         cluster_router.remove_user(self.user_id)
         logger.info(f"{self.name} detenido.")
 
@@ -108,6 +110,8 @@ class BotWorker:
         self.is_running = False
         if self._task and not self._task.done():
             self._task.cancel()
+        self._task = None
+        self.current_op = "IDLE"
         cluster_router.remove_user(self.user_id)
 
     def to_dict(self) -> dict:
@@ -127,19 +131,32 @@ class SimulatorController:
 
     def __init__(self):
         self.bots: Dict[int, BotWorker] = {i: BotWorker(i) for i in range(1, 10)}
+        self._loop: Optional[asyncio.AbstractEventLoop] = None
+
+    def set_loop(self, loop: asyncio.AbstractEventLoop):
+        self._loop = loop
 
     def set_bots_count(self, count: int):
         """Ajusta dinámicamente la cantidad de bots concurrentes activos (0 a 9)."""
         count = max(0, min(9, count))
+        
+        loop = None
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = self._loop
+
         for i in range(1, 10):
             bot = self.bots[i]
             if i <= count:
-                if not bot.is_running:
-                    try:
-                        loop = asyncio.get_running_loop()
-                        bot._task = loop.create_task(bot.run())
-                    except RuntimeError:
-                        bot.is_running = True
+                if not bot.is_running or (bot._task is not None and bot._task.done()):
+                    bot.is_running = True
+                    if loop and loop.is_running():
+                        try:
+                            running = asyncio.get_running_loop()
+                            bot._task = running.create_task(bot.run())
+                        except RuntimeError:
+                            bot._task = asyncio.run_coroutine_threadsafe(bot.run(), loop)
             else:
                 if bot.is_running:
                     bot.stop()

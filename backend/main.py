@@ -34,6 +34,8 @@ async def lifespan(app: FastAPI):
     postgres_manager.connect()
     
     if not settings.TESTING:
+        import asyncio
+        simulator_controller.set_loop(asyncio.get_running_loop())
         sync_scheduler.start()
         simulator_controller.set_bots_count(3)
     
