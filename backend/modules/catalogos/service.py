@@ -11,7 +11,7 @@ class CatalogoService:
     def crear_pedido(self, datos: PedidoCreateSchema, user_id: str = "bot_1") -> Tuple[dict, str]:
         # Registrar actividad del usuario para escalamiento dinámico
         cluster_router.touch_user(user_id)
-        cluster_id, cluster_name = cluster_router.get_target_cluster()
+        cluster_id, cluster_name = cluster_router.get_target_cluster(user_id=user_id)
 
         # Calcular monto total
         total = sum(item.cantidad * item.precio for item in datos.productos)

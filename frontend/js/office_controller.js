@@ -143,9 +143,9 @@ class OfficeApp {
 
             // 3. Actualizar indicador de Cluster en la barra
             const clusterSpan = document.getElementById('activeClusterText');
-            if (activeCount <= 3) clusterSpan.innerText = 'Cluster Mongo #1 (1-3 bots)';
-            else if (activeCount <= 6) clusterSpan.innerText = 'Cluster Mongo #2 (4-6 bots)';
-            else clusterSpan.innerText = 'Cluster Mongo #3 (7-9 bots)';
+            if (activeCount <= 3) clusterSpan.innerText = 'Cluster Mongo #1 activo (Bots 1-3)';
+            else if (activeCount <= 6) clusterSpan.innerText = 'Clusters Mongo #1 & #2 activos (Bots 1-6)';
+            else clusterSpan.innerText = 'Clusters Mongo #1, #2 & #3 activos (Bots 1-9)';
 
         } catch (err) {
             // Backend desconectado o iniciando

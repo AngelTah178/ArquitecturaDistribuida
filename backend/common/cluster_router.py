@@ -60,13 +60,48 @@ class DynamicClusterRouter:
         with self._lock:
             return len(self._active_users)
 
+    def get_active_users(self) -> List[dict]:
         """Retorna la lista de usuarios activos con su detalle."""
         self.cleanup_expired_sessions()
         with self._lock:
             return list(self._active_users.values())
 
-    def get_target_cluster(self, forced_count: Optional[int] = None) -> Tuple[int, str]:
+    def get_target_cluster(
+        self,
+        user_id: Optional[str] = None,
+        bot_id: Optional[int] = None,
+        forced_count: Optional[int] = None
+    ) -> Tuple[int, str]:
+        """
+        Determina el clúster objetivo.
+        Prioridad:
+        1. bot_id explícito (1-3 -> Cluster 1, 4-6 -> Cluster 2, 7-9 -> Cluster 3)
+        2. user_id explícito ("bot_X" o hash consistente para usuarios generales)
+        3. Concurrencia global (forced_count o get_active_users_count())
+        """
+        # 1. Por bot_id directo
+        if bot_id is not None:
+            if 1 <= bot_id <= 3:
+                return 1, "Cluster Mongo #1"
+            elif 4 <= bot_id <= 6:
+                return 2, "Cluster Mongo #2"
+            else:
+                return 3, "Cluster Mongo #3"
 
+        # 2. Por user_id
+        if user_id:
+            user_str = str(user_id)
+            if user_str.startswith("bot_"):
+                try:
+                    num = int(user_str.split("_")[1])
+                    return self.get_target_cluster(bot_id=num)
+                except (ValueError, IndexError):
+                    pass
+            # Enrutamiento hash consistente para usuarios humanos
+            cluster_num = (abs(hash(user_str)) % 3) + 1
+            return cluster_num, f"Cluster Mongo #{cluster_num}"
+
+        # 3. Fallback: Concurrencia global
         active_count = forced_count if forced_count is not None else self.get_active_users_count()
 
         if active_count <= 3:

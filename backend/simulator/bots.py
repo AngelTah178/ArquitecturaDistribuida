@@ -50,7 +50,7 @@ class BotWorker:
         while self.is_running:
             try:
                 cluster_router.touch_user(self.user_id, client_name=self.name)
-                target_num, target_name = cluster_router.get_target_cluster()
+                target_num, target_name = cluster_router.get_target_cluster(bot_id=self.bot_id)
                 self.cluster_used = target_name
 
                 op = random.choice(["INSERT", "INSERT", "READ", "READ", "UPDATE", "DELETE"])

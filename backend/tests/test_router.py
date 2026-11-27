@@ -38,3 +38,22 @@ def test_user_session_touch_and_remove():
     router.remove_user("user_a")
     assert router.get_active_users_count() == 1
     assert router.get_target_cluster() == (1, "Cluster Mongo #1")
+
+
+def test_individual_bot_routing_shards():
+    router = DynamicClusterRouter()
+    
+    # Bots 1 a 3 -> Cluster Mongo #1
+    for bot_id in (1, 2, 3):
+        assert router.get_target_cluster(bot_id=bot_id) == (1, "Cluster Mongo #1")
+        assert router.get_target_cluster(user_id=f"bot_{bot_id}") == (1, "Cluster Mongo #1")
+
+    # Bots 4 a 6 -> Cluster Mongo #2
+    for bot_id in (4, 5, 6):
+        assert router.get_target_cluster(bot_id=bot_id) == (2, "Cluster Mongo #2")
+        assert router.get_target_cluster(user_id=f"bot_{bot_id}") == (2, "Cluster Mongo #2")
+
+    # Bots 7 a 9 -> Cluster Mongo #3
+    for bot_id in (7, 8, 9):
+        assert router.get_target_cluster(bot_id=bot_id) == (3, "Cluster Mongo #3")
+        assert router.get_target_cluster(user_id=f"bot_{bot_id}") == (3, "Cluster Mongo #3")
